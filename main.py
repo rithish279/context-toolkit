@@ -1,12 +1,15 @@
-'''Do different context strategies produce different answers??'''
-
 import os
 from dotenv import load_dotenv
 from groq import Groq
 
+from strategies import get_all_strategies
+from utils import TokenCounter
+
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+token_counter = TokenCounter()
 
+# Test conversation
 conversation = [
     "User: Hi, I'm Alex",
     "User: I love pepperoni pizza",
@@ -16,50 +19,67 @@ conversation = [
     "User: What should I order for dinner?",
 ]
 
-def strategy_recent_only(chat, keep_last=2):
-    # keep last two messages
-    return chat[-keep_last:]
-
-def strategy_important_only(chat):
-    
-    important = []
-    keywords = ["name", "love", "allergy", "allergic"]
-
-    for msg in chat:
-        if any(k in msg.lower() for k in keywords):
-            important.append(msg)
-
-    if chat[-1] not in important:
-
-        important.append(chat[-1])
-    return important
+question = "What should I order for dinner?"
 
 def ask_ai(context, question):
-
+    """Send context to LLM and get response"""
     messages = []
     for msg in context:
-        if msg.startswith("User"):
-
+        if msg.startswith("User:"):
             messages.append({"role": "user", "content": msg[5:].strip()})
     messages.append({"role": "user", "content": question})
-
+    
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=messages,
-        max_tokens=100
+        max_tokens=150
     )
     return response.choices[0].message.content
 
-question = "What should I order for dinner?"
+def show_forgotten(full_conversation, kept_messages):
+    """Show which messages were forgotten"""
+    forgotten = [msg for msg in full_conversation if msg not in kept_messages]
+    if forgotten:
+        return f"FORGOTTEN ({len(forgotten)}): {forgotten[:3]}..."
+    return "All important info kept"
 
-print("=" * 60)
-print("STRATEGY 1: Recent Only (last 2 messages)")
-context1 = strategy_recent_only(conversation)
-print(f"Context: {context1}")
-print(f"AI says: {ask_ai(context1, question)}")
+def main():
+    print("\n" + "="*70)
+    print("AI CONTEXT MANAGEMENT TOOLKIT - Phase 2")
+    print("="*70)
+    
+    print(f"\nFull conversation: {len(conversation)} messages")
+    for i, msg in enumerate(conversation):
+        print(f"   {i+1}. {msg}")
+    
+    print(f"\nQuestion: {question}")
+    print("="*70)
+    
+    # Run all strategies
+    strategies = get_all_strategies()
+    
+    for strategy in strategies:
+        print(f"\nSTRATEGY: {strategy.name}")
+        
+        # Apply strategy
+        result = strategy.apply(conversation)
+        kept = result["kept_messages"]
+        metadata = result["metadata"]
+        
+        # Calculate metrics
+        token_count = token_counter.count_messages(kept)
+        
+        # Get AI response
+        response = ask_ai(kept, question)
+        
+        # Display results
+        print(f"   Description: {metadata['description']}")
+        print(f"   Tokens used: {token_count}")
+        print(f"   Messages kept: {len(kept)}/{metadata.get('total_messages', len(conversation))}")
+        print(f"   {show_forgotten(conversation, kept)}")
+        print(f"   Context given to AI: {kept}")
+        print(f"   AI Response: {response}")
+        print("-"*50)
 
-print("\n" + "=" * 60)
-print("STRATEGY 2: Important Only")
-context2 = strategy_important_only(conversation)
-print(f"Context: {context2}")
-print(f"AI says: {ask_ai(context2, question)}")
+if __name__ == "__main__":
+    main()
