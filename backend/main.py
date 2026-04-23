@@ -14,7 +14,6 @@ conversation = [
     "User: Hi, I'm Alex",
     "User: I love pepperoni pizza",
     "User: I'm allergic to peanuts",
-    "User: What's the weather?",
     "User: What movie should I watch?",
     "User: What should I order for dinner?",
 ]
