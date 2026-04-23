@@ -16,43 +16,15 @@ function App() {
   const [loading, setLoading] = useState(false)
 
   const analyzeStrategies = async () => {
-    setLoading(true)
-    // TODO: Call backend/API
-    // For now, use mock data
-    setTimeout(() => {
-      setResults({
-        recentOnly: {
-          name: "Recent Only",
-          tokensUsed: 17,
-          keptCount: 2,
-          totalCount: 6,
-          response: "Generic suggestions...",
-          keptMessages: conversation.slice(-2)
-        },
-        importantOnly: {
-          name: "Important Only",
-          tokensUsed: 23,
-          keptCount: 3,
-          totalCount: 6,
-          response: "Pepperoni pizza recommended...",
-          keptMessages: [conversation[1], conversation[2], conversation[5]]
-        },
-        summarize: {
-          name: "Summarize",
-          tokensUsed: 32,
-          keptCount: 4,
-          totalCount: 6,
-          response: "Generic Suggestions (forgot the allergy)...",
-          keptMessages: [
-            "User: Hi, I'm Alex",
-            "[... 3 messages omitted ...]",
-            "User: What movie should I watch?",
-            "User: What Should I order for dinner"
-          ]
-        }
-      })
-      setLoading(false)
-    }, 1000)
+  setLoading(true)
+  const response = await fetch('http://localhost:5000/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ conversation })
+  })
+  const data = await response.json()
+  setResults(data)
+  setLoading(false)
   }
 
   return (
