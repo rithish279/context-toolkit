@@ -36,6 +36,19 @@ function App() {
           totalCount: 6,
           response: "Pepperoni pizza recommended...",
           keptMessages: [conversation[1], conversation[2], conversation[5]]
+        },
+        summarize: {
+          name: "Summarize",
+          tokensUsed: 32,
+          keptCount: 4,
+          totalCount: 6,
+          response: "Generic Suggestions (forgot the allergy)...",
+          keptMessages: [
+            "User: Hi, I'm Alex",
+            "[... 3 messages omitted ...]",
+            "User: What movie should I watch?",
+            "User: What Should I order for dinner"
+          ]
         }
       })
       setLoading(false)
